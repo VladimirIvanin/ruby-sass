@@ -229,7 +229,7 @@ module Sass
       end
 
       PRECEDENCE = [
-        :comma, :single_eq, :space, :or, :and,
+        :comma, :single_eq, :space, :slash, :or, :and,
         [:eq, :neq],
         [:gt, :gte, :lt, :lte],
         [:plus, :minus],
@@ -640,7 +640,14 @@ RUBY
       def funcall
         tok = try_tok(:funcall)
         return raw unless tok
-        args, keywords, splat, kwarg_splat = fn_arglist
+        
+        # Special handling for CSS Color Level 4 functions
+        if %w[rgb rgba hsl hsla].include?(tok.value.downcase)
+          args, keywords, splat, kwarg_splat = color_fn_arglist
+        else
+          args, keywords, splat, kwarg_splat = fn_arglist
+        end
+        
         assert_tok(:rparen)
         node(Script::Tree::Funcall.new(tok.value, args, keywords, splat, kwarg_splat),
           tok.source_range.start_pos, source_position)
@@ -681,6 +688,162 @@ RUBY
 
       def fn_arglist
         arglist(:equals, "function argument")
+      end
+
+      # Special arglist parser for CSS Color Level 4 syntax
+      # Handles: rgb(255 0 0), rgb(255 0 0 / 0.5), rgb(255, 0, 0), rgb($r: 255, $g: 0, $b: 0)
+      def color_fn_arglist
+        without_stop_at do
+          args = []
+          keywords = Sass::Util::NormalizedMap.new
+          splat = nil
+          
+          # Parse first argument using unary_plus to avoid division interpretation
+          e = unary_plus
+          return [args, keywords, splat] unless e
+          
+          # Check what follows
+          peek = @lexer.peek
+          
+          # Keyword argument: $red: 255
+          if peek && peek.type == :colon
+            name = e
+            @lexer.expected!("comma") unless name.is_a?(Tree::Variable)
+            assert_tok(:colon)
+            value = assert_expr(:equals, "function argument")
+            keywords[name.name] = value
+            
+            # Continue parsing keyword arguments
+            while try_tok(:comma)
+              e = send(:equals)
+              break unless e
+              
+              if @lexer.peek && @lexer.peek.type == :colon
+                name = e
+                @lexer.expected!("comma") unless name.is_a?(Tree::Variable)
+                assert_tok(:colon)
+                value = assert_expr(:equals, "function argument")
+                
+                if keywords[name.name]
+                  raise SyntaxError.new("Keyword argument \"#{name.to_sass}\" passed more than once")
+                end
+                
+                keywords[name.name] = value
+              else
+                # Mixed positional and keyword - error will be raised by function
+                raise SyntaxError.new("Positional arguments must come before keyword arguments.")
+              end
+            end
+            
+            return [args, keywords, splat]
+          end
+          
+          # Comma-separated (legacy syntax): 255, 0, 0
+          if peek && peek.type == :comma
+            args << e
+            
+            while try_tok(:comma)
+              e = send(:equals)
+              break unless e
+              
+              # Check for keyword argument after positional
+              if @lexer.peek && @lexer.peek.type == :colon
+                name = e
+                @lexer.expected!("comma") unless name.is_a?(Tree::Variable)
+                assert_tok(:colon)
+                value = assert_expr(:equals, "function argument")
+                keywords[name.name] = value
+                
+                # Continue parsing remaining keyword arguments
+                while try_tok(:comma)
+                  e = send(:equals)
+                  break unless e
+                  
+                  if @lexer.peek && @lexer.peek.type == :colon
+                    name = e
+                    @lexer.expected!("comma") unless name.is_a?(Tree::Variable)
+                    assert_tok(:colon)
+                    value = assert_expr(:equals, "function argument")
+                    
+                    if keywords[name.name]
+                      raise SyntaxError.new("Keyword argument \"#{name.to_sass}\" passed more than once")
+                    end
+                    
+                    keywords[name.name] = value
+                  else
+                    raise SyntaxError.new("Positional arguments must come before keyword arguments.")
+                  end
+                end
+                break
+              end
+              
+              args << e
+            end
+            
+            return [args, keywords, splat]
+          end
+          
+          # Space-separated syntax (CSS Color Level 4): 255 0 0 / 0.5
+          start_pos = (e.source_range rescue nil)&.start_pos || source_position
+          values = [e]
+          
+          # Collect space-separated values
+          loop do
+            peek = @lexer.peek
+            break if !peek || peek.type == :rparen
+            
+            # Handle slash separator
+            if peek.type == :div
+              @lexer.next  # consume /
+              
+              # Parse alpha value
+              alpha = unary_plus
+              if alpha
+                # Build slash-separated list for alpha
+                alpha_list = node(
+                  Sass::Script::Tree::ListLiteral.new([alpha], separator: :slash),
+                  alpha.source_range.start_pos
+                )
+                
+                # Build space-separated list for RGB/HSL values
+                rgb_list = if values.length == 1
+                             values.first
+                           else
+                             node(
+                               Sass::Script::Tree::ListLiteral.new(values, separator: :space),
+                               start_pos
+                             )
+                           end
+                
+                # Build outer space-separated list: (rgb alpha)
+                result = node(
+                  Sass::Script::Tree::ListLiteral.new([rgb_list, alpha_list], separator: :space),
+                  start_pos
+                )
+                
+                return [[result], keywords, splat]
+              end
+              break
+            end
+            
+            # Parse next value
+            val = unary_plus
+            break unless val
+            values << val
+          end
+          
+          # Return space-separated values
+          result = if values.length == 1
+                     values.first
+                   else
+                     node(
+                       Sass::Script::Tree::ListLiteral.new(values, separator: :space),
+                       start_pos
+                     )
+                   end
+          
+          [[result], keywords, splat]
+        end
       end
 
       def mixin_arglist

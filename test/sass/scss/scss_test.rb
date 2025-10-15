@@ -4235,4 +4235,217 @@ p {\r\n   margin: 0;\r\n}
 SCSS
   end
 
+  ## CSS Color Level 4 syntax tests
+
+  def test_css_color_level4_rgb_space_separated
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: #00ff00; }
+CSS
+.foo {
+  color: rgb(0% 100% 0%);
+}
+SCSS
+
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgba(0, 255, 0, 0.5); }
+CSS
+.foo {
+  color: rgb(0% 100% 0% / 0.5);
+}
+SCSS
+  end
+
+  def test_css_color_level4_rgba_space_separated
+    # CSS Color Level 4 syntax forces hex output to avoid named colors
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: #00ff00; }
+CSS
+.foo {
+  color: rgba(0% 100% 0%);
+}
+SCSS
+
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgba(0, 255, 0, 0.5); }
+CSS
+.foo {
+  color: rgba(0% 100% 0% / 0.5);
+}
+SCSS
+  end
+
+  def test_css_color_level4_hsl_space_separated
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: #33cccc; }
+CSS
+.foo {
+  color: hsl(180 60% 50%);
+}
+SCSS
+
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgba(51, 204, 204, 0.5); }
+CSS
+.foo {
+  color: hsl(180 60% 50% / 0.5);
+}
+SCSS
+  end
+
+  def test_css_color_level4_hsla_space_separated
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: #33cccc; }
+CSS
+.foo {
+  color: hsla(180 60% 50%);
+}
+SCSS
+
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgba(51, 204, 204, 0.5); }
+CSS
+.foo {
+  color: hsla(180 60% 50% / 0.5);
+}
+SCSS
+  end
+
+  def test_css_color_level4_mixed_units
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: #00ff00; }
+CSS
+.foo {
+  color: rgb(0% 255 0%);
+}
+SCSS
+
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgba(0, 255, 0, 0.5); }
+CSS
+.foo {
+  color: rgb(0% 255 0% / 0.5);
+}
+SCSS
+  end
+
+  def test_css_color_level4_hue_units
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: #33cccc; }
+CSS
+.foo {
+  color: hsl(180deg 60% 50%);
+}
+SCSS
+
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgba(51, 204, 204, 0.5); }
+CSS
+.foo {
+  color: hsl(180deg 60% 50% / 0.5);
+}
+SCSS
+  end
+
+  def test_css_color_level4_alpha_percentage
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgba(0, 255, 0, 0.5); }
+CSS
+.foo {
+  color: rgb(0% 100% 0% / 50%);
+}
+SCSS
+
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgba(51, 204, 204, 0.5); }
+CSS
+.foo {
+  color: hsl(180 60% 50% / 50%);
+}
+SCSS
+  end
+
+  def test_css_color_level4_backwards_compatibility
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: lime; }
+CSS
+.foo {
+  color: rgb(0, 255, 0);
+}
+SCSS
+
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgba(0, 255, 0, 0.5); }
+CSS
+.foo {
+  color: rgba(0, 255, 0, 0.5);
+}
+SCSS
+  end
+
+  def test_css_color_level4_with_variables
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: #00ff00; }
+CSS
+$red: 0%;
+$green: 100%;
+$blue: 0%;
+
+.foo {
+  color: rgb($red $green $blue);
+}
+SCSS
+
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgba(0, 255, 0, 0.5); }
+CSS
+$red: 0%;
+$green: 100%;
+$blue: 0%;
+$alpha: 0.5;
+
+.foo {
+  color: rgb($red $green $blue / $alpha);
+}
+SCSS
+  end
+
+  def test_css_color_level4_with_calc
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgb(calc(100% - 50%) 0% 0%); }
+CSS
+.foo {
+  color: rgb(calc(100% - 50%) 0% 0%);
+}
+SCSS
+
+    # Note: slash separator info is lost in string conversion
+    assert_equal(<<CSS, render(<<SCSS))
+.foo {
+  color: rgba(calc(100% - 50%) 0% 0% 0.5); }
+CSS
+.foo {
+  color: rgba(calc(100% - 50%) 0% 0% / 0.5);
+}
+SCSS
+  end
+
 end

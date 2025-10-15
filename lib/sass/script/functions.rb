@@ -648,7 +648,42 @@ module Sass::Script
     #     inclusive
     # @return [Sass::Script::Value::Color]
     # @raise [ArgumentError] if any parameter is the wrong type or out of bounds
-    def rgb(red, green = nil, blue = nil)
+    def rgb(*args)
+      # Support CSS Color Level 4 syntax: rgb(0% 100% 0% / 0.5)
+      if args.length == 1 && args[0].is_a?(Sass::Script::Value::List)
+        list = args[0]
+        
+        if list.separator == :space
+          # New space-separated syntax
+          if list.value.length == 3
+            # rgb(0% 100% 0%) - simple space-separated without alpha
+            red, green, blue = list.value
+            # Check for special numbers (calc, var, etc.) and return as-is
+            if [red, green, blue].any? { |v| special_number?(v) || v.is_a?(Sass::Script::Value::String) }
+              return unquoted_string("rgb(#{list})")
+            end
+            return color_with_hex(red, green, blue)
+          elsif list.value.length == 2
+            # rgb(0% 100% 0% / 0.5) - space list with slash list for alpha
+            rgb_list, alpha_list = list.value
+            if rgb_list.is_a?(Sass::Script::Value::List) && rgb_list.separator == :space &&
+               alpha_list.is_a?(Sass::Script::Value::List) && alpha_list.separator == :slash &&
+               rgb_list.value.length == 3 && alpha_list.value.length == 1
+              red, green, blue = rgb_list.value
+              alpha = alpha_list.value[0]
+              # Check for special numbers and return as-is
+              if [red, green, blue, alpha].any? { |v| special_number?(v) || v.is_a?(Sass::Script::Value::String) }
+                return unquoted_string("rgb(#{list})")
+              end
+              return color_with_hex(red, green, blue, alpha)
+            end
+          end
+        end
+        return unquoted_string("rgb(#{list})")
+      end
+
+      # Legacy comma-separated syntax
+      red, green, blue = args
       if green.nil?
         return unquoted_string("rgb(#{red})") if var?(red)
         raise ArgumentError.new("wrong number of arguments (1 for 3)")
@@ -678,6 +713,7 @@ module Sass::Script
     declare :rgb, [:red, :green, :blue]
     declare :rgb, [:red, :green]
     declare :rgb, [:red]
+    declare :rgb, [:channels]
 
     # Creates a {Sass::Script::Value::Color Color} from red, green, blue, and
     # alpha values.
@@ -711,6 +747,40 @@ module Sass::Script
     #   @raise [ArgumentError] if `$alpha` is out of bounds or either parameter
     #     is the wrong type
     def rgba(*args)
+      # Support CSS Color Level 4 syntax: rgba(0% 100% 0% / 0.5)
+      if args.length == 1 && args[0].is_a?(Sass::Script::Value::List)
+        list = args[0]
+        
+        if list.separator == :space
+          # New space-separated syntax
+          if list.value.length == 3
+            # rgba(0% 100% 0%) - same as rgb without alpha
+            red, green, blue = list.value
+            # Check for special numbers and return as-is
+            if special_number?(red) || special_number?(green) || special_number?(blue)
+              return unquoted_string("rgba(#{list})")
+            end
+            return color_with_hex(red, green, blue)
+          elsif list.value.length == 2
+            # rgba(0% 100% 0% / 0.5) - space list with slash list for alpha
+            rgb_list, alpha_list = list.value
+            if rgb_list.is_a?(Sass::Script::Value::List) && rgb_list.separator == :space &&
+               alpha_list.is_a?(Sass::Script::Value::List) && alpha_list.separator == :slash &&
+               rgb_list.value.length == 3 && alpha_list.value.length == 1
+              red, green, blue = rgb_list.value
+              alpha = alpha_list.value[0]
+              # Check for special numbers and return as-is
+              if special_number?(red) || special_number?(green) || special_number?(blue) || special_number?(alpha)
+                return unquoted_string("rgba(#{list})")
+              end
+              return color_with_hex(red, green, blue, alpha)
+            end
+          end
+        end
+        return unquoted_string("rgba(#{list})")
+      end
+
+      # Legacy comma-separated syntax
       case args.size
       when 1
         return unquoted_string("rgba(#{args.first})") if var?(args.first)
@@ -757,6 +827,7 @@ module Sass::Script
     declare :rgba, [:red, :green, :blue]
     declare :rgba, [:color, :alpha]
     declare :rgba, [:red]
+    declare :rgba, [:channels]
 
     # Creates a {Sass::Script::Value::Color Color} from hue, saturation, and
     # lightness values. Uses the algorithm from the [CSS3 spec][].
@@ -774,7 +845,34 @@ module Sass::Script
     # @return [Sass::Script::Value::Color]
     # @raise [ArgumentError] if `$saturation` or `$lightness` are out of bounds
     #   or any parameter is the wrong type
-    def hsl(hue, saturation = nil, lightness = nil)
+    def hsl(*args)
+      # Support CSS Color Level 4 syntax: hsl(180 60% 50% / 0.5)
+      if args.length == 1 && args[0].is_a?(Sass::Script::Value::List)
+        list = args[0]
+        
+        if list.separator == :space
+          # New space-separated syntax
+          if list.value.length == 3
+            # hsl(180 60% 50%) - simple space-separated without alpha
+            hue, saturation, lightness = list.value
+            return hsl(hue, saturation, lightness)
+          elsif list.value.length == 2
+            # hsl(180 60% 50% / 0.5) - space list with slash list for alpha
+            hsl_list, alpha_list = list.value
+            if hsl_list.is_a?(Sass::Script::Value::List) && hsl_list.separator == :space &&
+               alpha_list.is_a?(Sass::Script::Value::List) && alpha_list.separator == :slash &&
+               hsl_list.value.length == 3 && alpha_list.value.length == 1
+              hue, saturation, lightness = hsl_list.value
+              alpha = alpha_list.value[0]
+              return hsla(hue, saturation, lightness, alpha)
+            end
+          end
+        end
+        return unquoted_string("hsl(#{list})")
+      end
+
+      # Legacy comma-separated syntax
+      hue, saturation, lightness = args
       if saturation.nil?
         return unquoted_string("hsl(#{hue})") if var?(hue)
         raise ArgumentError.new("wrong number of arguments (1 for 3)")
@@ -792,6 +890,7 @@ module Sass::Script
     declare :hsl, [:hue, :saturation, :lightness]
     declare :hsl, [:hue, :saturation]
     declare :hsl, [:hue]
+    declare :hsl, [:channels]
 
     # Creates a {Sass::Script::Value::Color Color} from hue,
     # saturation, lightness, and alpha values. Uses the algorithm from
@@ -812,7 +911,34 @@ module Sass::Script
     # @return [Sass::Script::Value::Color]
     # @raise [ArgumentError] if `$saturation`, `$lightness`, or `$alpha` are out
     #   of bounds or any parameter is the wrong type
-    def hsla(hue, saturation = nil, lightness = nil, alpha = nil)
+    def hsla(*args)
+      # Support CSS Color Level 4 syntax: hsla(180 60% 50% / 0.5)
+      if args.length == 1 && args[0].is_a?(Sass::Script::Value::List)
+        list = args[0]
+        
+        if list.separator == :space
+          # New space-separated syntax
+          if list.value.length == 3
+            # hsla(180 60% 50%) - same as hsl without alpha
+            hue, saturation, lightness = list.value
+            return hsla(hue, saturation, lightness, number(1))
+          elsif list.value.length == 2
+            # hsla(180 60% 50% / 0.5) - space list with slash list for alpha
+            hsl_list, alpha_list = list.value
+            if hsl_list.is_a?(Sass::Script::Value::List) && hsl_list.separator == :space &&
+               alpha_list.is_a?(Sass::Script::Value::List) && alpha_list.separator == :slash &&
+               hsl_list.value.length == 3 && alpha_list.value.length == 1
+              hue, saturation, lightness = hsl_list.value
+              alpha = alpha_list.value[0]
+              return hsla(hue, saturation, lightness, alpha)
+            end
+          end
+        end
+        return unquoted_string("hsla(#{list})")
+      end
+
+      # Legacy comma-separated syntax
+      hue, saturation, lightness, alpha = args
       if saturation.nil?
         return unquoted_string("hsla(#{hue})") if var?(hue)
         raise ArgumentError.new("wrong number of arguments (1 for 4)")
@@ -836,7 +962,7 @@ module Sass::Script
       assert_type lightness, :Number, :lightness
       assert_type alpha, :Number, :alpha
 
-      h = hue.value
+      h = normalize_hue(hue)
       s = saturation.value
       l = lightness.value
 
@@ -851,6 +977,7 @@ module Sass::Script
     declare :hsla, [:hue, :saturation, :lightness]
     declare :hsla, [:hue, :saturation]
     declare :hsla, [:hue]
+    declare :hsla, [:channels]
 
     # Gets the red component of a color. Calculated from HSL where necessary via
     # [this algorithm][hsl-to-rgb].
@@ -2906,7 +3033,63 @@ WARNING
       color.with(attr => color.send(attr).send(op, amount.value))
     end
 
+    # Helper method to create color with forced hex representation
+    def color_with_hex(red, green, blue, alpha = nil)
+      assert_type red, :Number, :red
+      assert_type green, :Number, :green
+      assert_type blue, :Number, :blue
+      
+      r = percentage_or_unitless(red, 255, "red").to_i
+      g = percentage_or_unitless(green, 255, "green").to_i
+      b = percentage_or_unitless(blue, 255, "blue").to_i
+      
+      if alpha.nil?
+        color = Sass::Script::Value::Color.new([r, g, b])
+        hex_str = "#%02x%02x%02x" % [r, g, b]
+        color.instance_variable_set(:@representation, hex_str)
+        color
+      else
+        assert_type alpha, :Number, :alpha
+        a = percentage_or_unitless(alpha, 1, "alpha")
+        color = Sass::Script::Value::Color.new([r, g, b, a])
+        if a == 1
+          hex_str = "#%02x%02x%02x" % [r, g, b]
+        else
+          hex_str = "rgba(%d, %d, %d, %s)" % [r, g, b, a]
+        end
+        color.instance_variable_set(:@representation, hex_str)
+        color
+      end
+    end
+
+    # Normalize angle to degrees
+    # (0-360 range)
+    # Supports: deg, grad, rad, turn
+    def normalize_hue(hue)
+      value = hue.value
+      
+      if hue.unitless? || hue.is_unit?("deg")
+        # Already in degrees or unitless (treat as degrees)
+        value = value.to_f
+      elsif hue.is_unit?("grad")
+        # Convert gradians to degrees (400grad = 360deg)
+        value = value * 360.0 / 400.0
+      elsif hue.is_unit?("rad")
+        # Convert radians to degrees (2π rad = 360deg)
+        value = value * 180.0 / Math::PI
+      elsif hue.is_unit?("turn")
+        # Convert turns to degrees (1turn = 360deg)
+        value = value * 360.0
+      else
+        # For any other unit, just use the value as-is
+        value = value.to_f
+      end
+      
+      value
+    end
+
     def percentage_or_unitless(number, max, name)
+
       if number.unitless?
         number.value
       elsif number.is_unit?("%")

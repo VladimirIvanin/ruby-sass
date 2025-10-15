@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-require File.dirname(__FILE__) + '/../test_helper'
-require File.dirname(__FILE__) + '/test_helper'
+require File.expand_path('../test_helper', __FILE__)
 require 'sass/engine'
 require 'stringio'
 require 'mock_importer'
@@ -3495,5 +3494,197 @@ SASS
     key = engine.send(:sassc_key)
     File.join(engine.options[:cache_location], key)
   end
+
+  ## CSS Color Level 4 syntax tests
+
+  def test_css_color_level4_rgb_space_separated_sass
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: #00ff00
+CSS
+.foo
+  color: rgb(0% 100% 0%)
+SASS
+
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgba(0, 255, 0, 0.5)
+CSS
+.foo
+  color: rgb(0% 100% 0% / 0.5)
+SASS
+  end
+
+  def test_css_color_level4_rgba_space_separated_sass
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: #00ff00
+CSS
+.foo
+  color: rgba(0% 100% 0%)
+SASS
+
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgba(0, 255, 0, 0.5)
+CSS
+.foo
+  color: rgba(0% 100% 0% / 0.5)
+SASS
+  end
+
+  def test_css_color_level4_hsl_space_separated_sass
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: #33cccc
+CSS
+.foo
+  color: hsl(180 60% 50%)
+SASS
+
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgba(51, 204, 204, 0.5)
+CSS
+.foo
+  color: hsl(180 60% 50% / 0.5)
+SASS
+  end
+
+  def test_css_color_level4_hsla_space_separated_sass
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: #33cccc
+CSS
+.foo
+  color: hsla(180 60% 50%)
+SASS
+
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgba(51, 204, 204, 0.5)
+CSS
+.foo
+  color: hsla(180 60% 50% / 0.5)
+SASS
+  end
+
+  def test_css_color_level4_mixed_units_sass
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: #00ff00
+CSS
+.foo
+  color: rgb(0% 255 0%)
+SASS
+
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgba(0, 255, 0, 0.5)
+CSS
+.foo
+  color: rgb(0% 255 0% / 0.5)
+SASS
+  end
+
+  def test_css_color_level4_hue_units_sass
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: #33cccc
+CSS
+.foo
+  color: hsl(180deg 60% 50%)
+SASS
+
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgba(51, 204, 204, 0.5)
+CSS
+.foo
+  color: hsl(180deg 60% 50% / 0.5)
+SASS
+  end
+
+  def test_css_color_level4_alpha_percentage_sass
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgba(0, 255, 0, 0.5)
+CSS
+.foo
+  color: rgb(0% 100% 0% / 50%)
+SASS
+
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgba(51, 204, 204, 0.5)
+CSS
+.foo
+  color: hsl(180 60% 50% / 50%)
+SASS
+  end
+
+  def test_css_color_level4_backwards_compatibility_sass
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: #00ff00
+CSS
+.foo
+  color: rgb(0, 255, 0)
+SASS
+
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgba(0, 255, 0, 0.5)
+CSS
+.foo
+  color: rgba(0, 255, 0, 0.5)
+SASS
+  end
+
+  def test_css_color_level4_with_variables_sass
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: #00ff00
+CSS
+$red: 0%
+$green: 100%
+$blue: 0%
+
+.foo
+  color: rgb($red $green $blue)
+SASS
+
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgba(0, 255, 0, 0.5)
+CSS
+$red: 0%
+$green: 100%
+$blue: 0%
+$alpha: 0.5
+
+.foo
+  color: rgb($red $green $blue / $alpha)
+SASS
+  end
+
+  def test_css_color_level4_with_calc_sass
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgb(calc(100% - 50%) 0% 0%)
+CSS
+.foo
+  color: rgb(calc(100% - 50%) 0% 0%)
+SASS
+
+    assert_equal(<<CSS, render(<<SASS))
+.foo
+  color: rgba(calc(100% - 50%) 0% 0% / 0.5)
+CSS
+.foo
+  color: rgba(calc(100% - 50%) 0% 0% / 0.5)
+SASS
+  end
+
 end
  
