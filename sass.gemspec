@@ -20,14 +20,14 @@ SASS_GEMSPEC = Gem::Specification.new do |spec|
       command line tool or a web-framework plugin.
     END
 
-  spec.required_ruby_version = '>= 2.0.0'
+  spec.required_ruby_version = '>= 3.0.0'
 
   spec.add_runtime_dependency 'sass-listen', '~> 4.0.0'
 
-  spec.add_development_dependency 'yard', '~> 0.8.7.6'
-  spec.add_development_dependency 'redcarpet', '~> 3.3'
-  spec.add_development_dependency 'nokogiri', '~> 1.6.0'
-  spec.add_development_dependency 'minitest', '>= 5'
+  spec.add_development_dependency 'yard', '~> 0.9.0'
+  spec.add_development_dependency 'redcarpet', '~> 3.6.0'
+  spec.add_development_dependency 'nokogiri', '~> 1.15.0'
+  spec.add_development_dependency 'minitest', '~> 5.20'
 
   readmes = Dir['*'].reject{ |x| x =~ /(^|[^.a-z])[a-z]+/ || x == "TODO" }
   spec.executables = ['sass', 'sass-convert', 'scss']

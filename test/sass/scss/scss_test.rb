@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require File.dirname(__FILE__) + '/test_helper'
 
-class ScssTest < MiniTest::Test
+class ScssTest < Minitest::Test
   include ScssTestHelper
 
   ## One-Line Comments

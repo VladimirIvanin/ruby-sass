@@ -30,7 +30,7 @@ module Sass::Script::Functions
   include Sass::Script::Functions::UserFunctions
 end
 
-class SassEngineTest < MiniTest::Test
+class SassEngineTest < Minitest::Test
   FAKE_FILE_NAME = __FILE__.gsub(/rb$/,"sass")
   # A map of erroneous Sass documents to the error messages they should produce.
   # The error messages may be arrays;

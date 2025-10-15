@@ -4,7 +4,7 @@ require 'sass/engine'
 
 # Most CSS variable tests are in sass-spec, but a few relate to formatting or
 # conversion and so belong here.
-class CssVariableTest < MiniTest::Test
+class CssVariableTest < Minitest::Test
   def test_folded_inline_whitespace
     assert_variable_value "foo bar baz", "foo    bar        baz"
     assert_variable_value "foo bar", "foo \t   bar"

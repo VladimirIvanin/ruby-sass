@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/test_helper'
 require 'mock_importer'
 require 'sass/plugin'
 
-class ImporterTest < MiniTest::Test
+class ImporterTest < Minitest::Test
 
   class FruitImporter < Sass::Importers::Base
     def find(name, context = nil)

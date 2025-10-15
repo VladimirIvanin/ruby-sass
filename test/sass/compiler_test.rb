@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/../test_helper'
 require 'sass/plugin'
 require 'sass/plugin/compiler'
 
-class CompilerTest < MiniTest::Test
+class CompilerTest < Minitest::Test
   class FakeListener
     attr_accessor :options
     attr_accessor :directories

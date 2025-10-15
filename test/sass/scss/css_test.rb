@@ -5,7 +5,7 @@ require 'sass/scss/css_parser'
 # These tests just test the parsing of CSS
 # (both standard and any hacks we intend to support).
 # Tests of SCSS-specific behavior go in scss_test.rb.
-class ScssCssTest < MiniTest::Test
+class ScssCssTest < Minitest::Test
   include ScssTestHelper
 
   def test_basic_scss

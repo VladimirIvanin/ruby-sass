@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
-class SuperselectorTest < MiniTest::Test
+class SuperselectorTest < Minitest::Test
   def test_superselector_reflexivity
     assert_superselector 'h1', 'h1'
     assert_superselector '.foo', '.foo'

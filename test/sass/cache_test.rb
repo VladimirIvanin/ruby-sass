@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/../test_helper'
 require File.dirname(__FILE__) + '/test_helper'
 require 'sass/engine'
 
-class CacheTest < MiniTest::Test
+class CacheTest < Minitest::Test
   @@cache_dir = "tmp/file_cache"
 
   def setup

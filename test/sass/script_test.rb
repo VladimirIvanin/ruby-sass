@@ -17,7 +17,7 @@ module Sass::Script::Functions
   include Sass::Script::Functions::UserFunctions
 end
 
-class SassScriptTest < MiniTest::Test
+class SassScriptTest < Minitest::Test
   include Sass::Script
 
   def test_color_clamps_input

@@ -2,7 +2,7 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 require 'sass/engine'
 
-class ScssRxTest < MiniTest::Test
+class ScssRxTest < Minitest::Test
   include Sass::SCSS::RX
 
   def test_identifiers

@@ -22,7 +22,7 @@ module Sass::Script::Functions
   end
 end
 
-class MiniTest::Test
+class Minitest::Test
   def munge_filename(opts = {})
     opts[:filename] ||= filename_for_test(opts[:syntax] || :sass)
     opts[:sourcemap_filename] ||= sourcemap_filename_for_test
