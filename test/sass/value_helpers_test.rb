@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
-class ValueHelpersTest < MiniTest::Test
+class ValueHelpersTest < Minitest::Test
   include Sass::Script
   include Sass::Script::Value::Helpers
 

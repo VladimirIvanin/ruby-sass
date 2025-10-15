@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
-class ExtendTest < MiniTest::Test
+class ExtendTest < Minitest::Test
   def test_basic
     assert_equal <<CSS, render(<<SCSS)
 .foo, .bar {

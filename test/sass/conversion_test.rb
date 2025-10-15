@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
-class ConversionTest < MiniTest::Test
+class ConversionTest < Minitest::Test
   def test_basic
     assert_converts <<SASS, <<SCSS
 foo bar

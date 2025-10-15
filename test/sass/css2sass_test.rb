@@ -2,7 +2,7 @@ require 'minitest/autorun'
 require File.dirname(__FILE__) + '/../test_helper'
 require 'sass/css'
 
-class CSS2SassTest < MiniTest::Test
+class CSS2SassTest < Minitest::Test
   def test_basic
     css = <<CSS
 h1 {

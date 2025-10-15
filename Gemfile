@@ -2,17 +2,16 @@ source "https://rubygems.org"
 
 gemspec
 
-if RUBY_VERSION =~ /^1\.8/ || RUBY_VERSION =~ /^1\.9\.[012]$/
-  gem 'rake', '~> 10.5.0'
-else
-  gem 'rake', '~> 11.0'
-end
+gem 'rake', '~> 13.0'
+gem 'minitest', '~> 5.20', :group => :test
 
-gem 'minitest', '>= 5.0.0', '< 6.0.0', :group => :test
-# gem "sass-spec", :path => "../sass-spec"
-gem "sass-spec", :git => 'https://github.com/sass/sass-spec.git', :branch => 'master'
+# Sass-spec по тегу v3.5.4 для совместимости (временно отключен из-за проблем с ruby-terminfo)
+# gem "sass-spec", :git => 'https://github.com/sass/sass-spec.git', :tag => 'v3.5.4'
 
-# Removed from standard library in Ruby 2.5.0.
-if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.5.0')
+gem 'yard', '~> 0.9.0'
+gem 'redcarpet', '~> 3.6.0'
+
+# mathn удален из Ruby 3.0+, но нужен для тестов
+if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('3.0.0')
   gem 'mathn'
 end

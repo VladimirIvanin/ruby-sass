@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/../test_helper'
 require File.dirname(__FILE__) + '/test_helper'
 require 'sass/util/test'
 
-class EncodingTest < MiniTest::Test
+class EncodingTest < Minitest::Test
   include Sass::Util::Test
 
   def test_encoding_error

@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
-class SubsetMapTest < MiniTest::Test
+class SubsetMapTest < Minitest::Test
   def setup
     @ssm = Sass::Util::SubsetMap.new
     @ssm[Set[1, 2]] = "Foo"

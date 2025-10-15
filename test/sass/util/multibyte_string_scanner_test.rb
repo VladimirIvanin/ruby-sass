@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require File.dirname(__FILE__) + '/../../test_helper'
 
-class MultibyteStringScannerTest < MiniTest::Test
+class MultibyteStringScannerTest < Minitest::Test
   def setup
     @scanner = Sass::Util::MultibyteStringScanner.new("cölorfül")
   end

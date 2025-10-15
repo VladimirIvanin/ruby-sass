@@ -3,7 +3,7 @@ require 'fileutils'
 require 'sass/util/test'
 require 'tmpdir'
 
-class ExecTest < MiniTest::Test
+class ExecTest < Minitest::Test
   include Sass::Util::Test
 
   def setup

@@ -296,7 +296,11 @@ class Sass::Tree::Visitors::ToCss < Sass::Tree::Visitors::Base
           rule_part.gsub!(/([^,])\s*\n\s*/m, '\1 ')
           rule_part.gsub!(/\s*([+>])\s*/m, '\1')
           rule_part.gsub!(/nth([^( ]*)\(([^)]*)\)/m) do |match|
-            match.tr(" \t\n", "")
+            if match.include?(' of ')
+              match.gsub(/\s+/, ' ').gsub(/\s+of\s+/, ' of ')
+            else
+              match.tr(" \t\n", "")
+            end
           end
           rule_part = Sass::Util.strip_except_escapes(rule_part)
         end

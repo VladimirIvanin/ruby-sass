@@ -16,7 +16,7 @@ module Sass::Script::Functions
   end
 end
 
-class SassPluginTest < MiniTest::Test
+class SassPluginTest < Minitest::Test
   @@templates = %w{
     complex script parent_ref import scss_import alt
     subdir/subdir subdir/nested_subdir/nested_subdir

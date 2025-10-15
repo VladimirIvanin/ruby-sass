@@ -2,7 +2,7 @@
 require File.dirname(__FILE__) + '/../test_helper'
 require File.dirname(__FILE__) + '/test_helper'
 
-class SourcemapTest < MiniTest::Test
+class SourcemapTest < Minitest::Test
   def test_to_json_requires_args
     _, sourcemap = render_with_sourcemap('')
     assert_raises(ArgumentError) {sourcemap.to_json({})}

@@ -7,8 +7,7 @@ module Sass::Script::Tree
     # @return [Array<Node>]
     attr_reader :elements
 
-    # The operator separating the values of the list. Either `:comma` or
-    # `:space`.
+    # The operator separating the values of the list. Either `:comma`, `:space`, or `:slash`.
     #
     # @return [Symbol]
     attr_reader :separator
@@ -112,6 +111,7 @@ module Sass::Script::Tree
 
     def sep_str(opts = options)
       return ' ' if separator == :space
+      return ' / ' if separator == :slash
       return ',' if opts && opts[:style] == :compressed
       ', '
     end

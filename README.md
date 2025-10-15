@@ -6,6 +6,13 @@ See [the Sass blog][], and consider switching to the [`sassc` gem].
 [the Sass blog]: https://sass-lang.com/blog/posts/7828841
 [`sassc` gem]: https://rubygems.org/gems/sassc
 
+## Requirements
+
+- **Ruby**: >= 3.0.0 (recommended: Ruby 3.1.2+)
+- **Bundler**: For dependency management
+
+This project has been updated for compatibility with modern Ruby versions.
+
 # Sass [![Travis Build Status](https://travis-ci.org/sass/ruby-sass.svg?branch=next)](https://travis-ci.org/sass/ruby-sass) [![Gem Version](https://badge.fury.io/rb/sass.svg)](http://badge.fury.io/rb/sass) [![Inline docs](http://inch-ci.org/github/sass/sass.svg)](http://inch-ci.org/github/sass/sass)
 
 **Sass makes CSS fun again**. Sass is an extension of CSS,
