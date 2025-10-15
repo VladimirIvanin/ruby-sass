@@ -82,8 +82,16 @@ module Sass
               # this is a narrow edge case and supporting it properly would make
               # this code and the code calling it a lot more complicated, so
               # it's not supported for now.
-              next [] unless sel.normalized_name == 'matches'
-              sel.selector.members
+              # Support :has, :host, :host-context, :slotted within :not
+              if sel.normalized_name == 'matches'
+                sel.selector.members
+              elsif %w(has host host-context slotted).include?(sel.normalized_name)
+                # For :has, :host, :host-context, :slotted, we need to preserve the selector
+                # as-is to maintain the semantic meaning
+                sel
+              else
+                []
+              end
             when 'matches', 'any', 'current', 'nth-child', 'nth-last-child'
               # As above, we could theoretically support :not within :matches, but
               # doing so would require this method and its callers to handle much
