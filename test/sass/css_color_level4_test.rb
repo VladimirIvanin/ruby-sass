@@ -196,6 +196,89 @@ class CssColorLevel4Test
   end
 
   # ============================================================================
+  # Тесты процентов в RGB и альфа-канале (CSS Color Level 4)
+  # ============================================================================
+
+  def test_rgb_with_percentage_channels
+    # 100% = 255, 0% = 0
+    scss = ".test { color: rgb(100% 0% 0%); }"
+    expected = ".test{color:red}"
+    assert_equal expected, render(scss, :style => :compressed).strip
+  end
+
+  def test_rgb_with_percentage_channels_and_alpha
+    # 100% red, 0% green, 0% blue, 50% alpha
+    scss = ".test { color: rgb(100% 0% 0% / 50%); }"
+    expected = ".test{color:rgba(255,0,0,0.5)}"
+    assert_equal expected, render(scss, :style => :compressed).strip
+  end
+
+  def test_rgb_with_mixed_percentage_and_number
+    # По спецификации нельзя смешивать проценты и числа в RGB каналах
+    # но можно использовать проценты для альфы с числами для RGB
+    scss = ".test { color: rgb(255 128 0 / 50%); }"
+    expected = ".test{color:rgba(255,128,0,0.5)}"
+    assert_equal expected, render(scss, :style => :compressed).strip
+  end
+
+  def test_rgb_with_percentage_channels_various_values
+    # 50% = 127.5 ≈ 127, 25% = 63.75 ≈ 63, 75% = 191.25 ≈ 191
+    scss = ".test { color: rgb(50% 25% 75%); }"
+    # 50% of 255 = 127.5, 25% of 255 = 63.75, 75% of 255 = 191.25
+    expected = ".test{color:#7f3fbf}"
+    assert_equal expected, render(scss, :style => :compressed).strip
+  end
+
+  def test_rgba_with_percentage_alpha
+    # Альфа-канал может быть процентом: 80% = 0.8
+    scss = ".test { color: rgba(255, 128, 0, 80%); }"
+    expected = ".test{color:rgba(255,128,0,0.8)}"
+    assert_equal expected, render(scss, :style => :compressed).strip
+  end
+
+  def test_rgb_new_syntax_percentage_with_zero_alpha
+    # 0% alpha = полностью прозрачный, 50% = 127.5 ≈ 127
+    scss = ".test { color: rgb(100% 50% 0% / 0%); }"
+    expected = ".test{color:rgba(255,127,0,0)}"
+    assert_equal expected, render(scss, :style => :compressed).strip
+  end
+
+  def test_rgb_new_syntax_percentage_with_full_alpha
+    # 100% alpha = полностью непрозрачный, 50% = 127.5 ≈ 127
+    scss = ".test { color: rgb(100% 50% 0% / 100%); }"
+    expected = ".test{color:#ff7f00}"
+    assert_equal expected, render(scss, :style => :compressed).strip
+  end
+
+  def test_hsl_with_percentage_alpha
+    # HSL уже использует проценты для S и L, тест для альфы в процентах
+    scss = ".test { color: hsl(180 50% 50% / 75%); }"
+    expected = ".test{color:rgba(64,191,191,0.75)}"
+    assert_equal expected, render(scss, :style => :compressed).strip
+  end
+
+  def test_rgb_percentage_with_var_in_alpha
+    # Проценты в каналах + var() в альфе
+    scss = ".test { color: rgb(100% 0% 0% / var(--alpha)); }"
+    expected = ".test{color:rgb(100% 0% 0% / var(--alpha))}"
+    assert_equal expected, render(scss, :style => :compressed).strip
+  end
+
+  def test_rgb_percentage_with_calc_in_alpha
+    # Проценты в каналах + calc() в альфе
+    scss = ".test { color: rgb(100% 50% 0% / calc(50% + 25%)); }"
+    expected = ".test{color:rgb(100% 50% 0% / calc(50% + 25%))}"
+    assert_equal expected, render(scss, :style => :compressed).strip
+  end
+
+  def test_rgba_legacy_syntax_percentage_alpha
+    # Legacy запятой-разделенный синтаксис с процентной альфой
+    scss = ".test { color: rgba(255, 128, 0, 50%); }"
+    expected = ".test{color:rgba(255,128,0,0.5)}"
+    assert_equal expected, render(scss, :style => :compressed).strip
+  end
+
+  # ============================================================================
   # Тесты смешанных случаев
   # ============================================================================
 
