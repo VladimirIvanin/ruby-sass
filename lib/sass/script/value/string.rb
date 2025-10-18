@@ -134,5 +134,20 @@ WARNING
     def inspect
       String.quote(value)
     end
+
+    # Returns whether this string is a "special number" function like calc() or var().
+    # According to CSS Color Level 4 spec, these should be passed through to CSS.
+    #
+    # @return [Boolean]
+    def is_special_number?
+      type == :identifier && value =~ /(calc|var|env|attr|clamp|min|max)\s*\(/i
+    end
+
+    # Returns whether this string is a var() call.
+    #
+    # @return [Boolean]
+    def is_var?
+      type == :identifier && value =~ /var\s*\(/i
+    end
   end
 end

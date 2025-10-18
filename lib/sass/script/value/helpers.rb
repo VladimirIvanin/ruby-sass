@@ -130,6 +130,43 @@ module Sass::Script::Value
     end
     alias_method :identifier, :unquoted_string
 
+    # Formats a CSS Color Level 4 function call with proper slash separator handling.
+    # Used for functions like rgb(), hsl() that support space-separated and slash-separated syntax.
+    #
+    # @param function_name [String] The name of the function (e.g., "rgb", "hsl")
+    # @param list [Sass::Script::Value::List] The list of arguments
+    # @return [Sass::Script::Value::String] The formatted function string
+    def format_color_function(function_name, list)
+      # Check if this is a space-separated list with a slash-separated alpha component
+      if list.is_a?(Sass::Script::Value::List) && 
+         list.separator == :space && 
+         list.value.length == 2
+        
+        rgb_or_hsl = list.value[0]
+        alpha_part = list.value[1]
+        
+        # Check if alpha part is a slash-separated list
+        if alpha_part.is_a?(Sass::Script::Value::List) && 
+           alpha_part.separator == :slash && 
+           alpha_part.value.length == 1
+          
+          # Format: rgb(255 128 0 / 0.5)
+          rgb_str = if rgb_or_hsl.is_a?(Sass::Script::Value::List)
+                      rgb_or_hsl.value.map(&:to_s).join(' ')
+                    else
+                      rgb_or_hsl.to_s
+                    end
+          
+          alpha_str = alpha_part.value[0].to_s
+          
+          return unquoted_string("#{function_name}(#{rgb_str} / #{alpha_str})")
+        end
+      end
+      
+      # Default formatting
+      unquoted_string("#{function_name}(#{list})")
+    end
+
     # Parses a user-provided selector.
     #
     # @param value [Sass::Script::Value::String, Sass::Script::Value::List]
@@ -222,12 +259,18 @@ module Sass::Script::Value
     end
 
     # Returns whether the literal is a special CSS value that may evaluate to a
-    # number, such as `calc()` or `var()`.
+    # number, such as `calc()`, `var()`, `env()`, `attr()`, `clamp()`, `min()`, or `max()`.
+    #
+    # These functions are part of CSS Color Level 4 spec and should be passed through
+    # to CSS without evaluation.
     #
     # @param literal [Sass::Script::Value::Base] The value to check
     # @return Boolean
     def special_number?(literal)
-      literal.is_a?(Sass::Script::Value::String) && literal.value =~ /(calc|var)\(/
+      return false unless literal.is_a?(Sass::Script::Value::String)
+      # Check for CSS special functions that can evaluate to numbers
+      # According to CSS Color Level 4 and CSS Values Level 4 specs
+      literal.value =~ /(calc|var|env|attr|clamp|min|max)\s*\(/i
     end
 
     private

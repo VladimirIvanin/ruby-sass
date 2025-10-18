@@ -168,6 +168,24 @@ MSG
       true
     end
 
+    # Returns whether this value is a "special number" that CSS may treat as a number.
+    # This includes functions like `calc()`, `var()`, `env()`, etc.
+    #
+    # According to CSS Color Level 4 and CSS Values Level 4 specs, these functions
+    # should be passed through to CSS without evaluation.
+    #
+    # @return [Boolean] Whether this is a special number value
+    def is_special_number?
+      false
+    end
+
+    # Returns whether this value is a `var()` call.
+    #
+    # @return [Boolean] Whether this is a var() call
+    def is_var?
+      false
+    end
+
     # Compares this object with another.
     #
     # @param other [Object] The object to compare with

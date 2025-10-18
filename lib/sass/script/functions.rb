@@ -653,13 +653,16 @@ module Sass::Script
       if args.length == 1 && args[0].is_a?(Sass::Script::Value::List)
         list = args[0]
         
+        # Check if this is a var() call - pass through as-is
+        return unquoted_string("rgb(#{list})") if list.is_var?
+        
         if list.separator == :space
           # New space-separated syntax
           if list.value.length == 3
             # rgb(0% 100% 0%) - simple space-separated without alpha
             red, green, blue = list.value
             # Check for special numbers (calc, var, etc.) and return as-is
-            if [red, green, blue].any? { |v| special_number?(v) || v.is_a?(Sass::Script::Value::String) }
+            if [red, green, blue].any? { |v| v.is_special_number? }
               return unquoted_string("rgb(#{list})")
             end
             return color_with_hex(red, green, blue)
@@ -672,8 +675,8 @@ module Sass::Script
               red, green, blue = rgb_list.value
               alpha = alpha_list.value[0]
               # Check for special numbers and return as-is
-              if [red, green, blue, alpha].any? { |v| special_number?(v) || v.is_a?(Sass::Script::Value::String) }
-                return unquoted_string("rgb(#{list})")
+              if [red, green, blue, alpha].any? { |v| v.is_special_number? }
+                return format_color_function("rgb", list)
               end
               return color_with_hex(red, green, blue, alpha)
             end
@@ -685,14 +688,14 @@ module Sass::Script
       # Legacy comma-separated syntax
       red, green, blue = args
       if green.nil?
-        return unquoted_string("rgb(#{red})") if var?(red)
+        return unquoted_string("rgb(#{red})") if red.is_var?
         raise ArgumentError.new("wrong number of arguments (1 for 3)")
       elsif blue.nil?
-        return unquoted_string("rgb(#{red}, #{green})") if var?(red) || var?(green)
+        return unquoted_string("rgb(#{red}, #{green})") if red.is_var? || green.is_var?
         raise ArgumentError.new("wrong number of arguments (2 for 3)")
       end
 
-      if special_number?(red) || special_number?(green) || special_number?(blue)
+      if red.is_special_number? || green.is_special_number? || blue.is_special_number?
         return unquoted_string("rgb(#{red}, #{green}, #{blue})")
       end
       assert_type red, :Number, :red
@@ -751,13 +754,16 @@ module Sass::Script
       if args.length == 1 && args[0].is_a?(Sass::Script::Value::List)
         list = args[0]
         
+        # Check if this is a var() call - pass through as-is
+        return unquoted_string("rgba(#{list})") if list.is_var?
+        
         if list.separator == :space
           # New space-separated syntax
           if list.value.length == 3
             # rgba(0% 100% 0%) - same as rgb without alpha
             red, green, blue = list.value
             # Check for special numbers and return as-is
-            if special_number?(red) || special_number?(green) || special_number?(blue)
+            if [red, green, blue].any? { |v| v.is_special_number? }
               return unquoted_string("rgba(#{list})")
             end
             return color_with_hex(red, green, blue)
@@ -770,8 +776,8 @@ module Sass::Script
               red, green, blue = rgb_list.value
               alpha = alpha_list.value[0]
               # Check for special numbers and return as-is
-              if special_number?(red) || special_number?(green) || special_number?(blue) || special_number?(alpha)
-                return unquoted_string("rgba(#{list})")
+              if [red, green, blue, alpha].any? { |v| v.is_special_number? }
+                return format_color_function("rgba", list)
               end
               return color_with_hex(red, green, blue, alpha)
             end
@@ -783,14 +789,14 @@ module Sass::Script
       # Legacy comma-separated syntax
       case args.size
       when 1
-        return unquoted_string("rgba(#{args.first})") if var?(args.first)
+        return unquoted_string("rgba(#{args.first})") if args.first.is_var?
         raise ArgumentError.new("wrong number of arguments (1 for 4)")
       when 2
         color, alpha = args
 
-        if var?(color)
+        if color.is_var?
           return unquoted_string("rgba(#{color}, #{alpha})")
-        elsif var?(alpha)
+        elsif alpha.is_var?
           if color.is_a?(Sass::Script::Value::Color)
             return unquoted_string("rgba(#{color.red}, #{color.green}, #{color.blue}, #{alpha})")
           else
@@ -799,22 +805,22 @@ module Sass::Script
         end
 
         assert_type color, :Color, :color
-        if special_number?(alpha)
+        if alpha.is_special_number?
           unquoted_string("rgba(#{color.red}, #{color.green}, #{color.blue}, #{alpha})")
         else
           assert_type alpha, :Number, :alpha
           color.with(:alpha => percentage_or_unitless(alpha, 1, "alpha"))
         end
       when 3
-        if var?(args[0]) || var?(args[1]) || var?(args[2])
+        if args[0].is_var? || args[1].is_var? || args[2].is_var?
           unquoted_string("rgba(#{args.join(', ')})")
         else
           raise ArgumentError.new("wrong number of arguments (3 for 4)")
         end
       when 4
         red, green, blue, alpha = args
-        if special_number?(red) || special_number?(green) ||
-           special_number?(blue) || special_number?(alpha)
+        if red.is_special_number? || green.is_special_number? ||
+           blue.is_special_number? || alpha.is_special_number?
           unquoted_string("rgba(#{red}, #{green}, #{blue}, #{alpha})")
         else
           rgba(rgb(red, green, blue), alpha)
@@ -850,11 +856,18 @@ module Sass::Script
       if args.length == 1 && args[0].is_a?(Sass::Script::Value::List)
         list = args[0]
         
+        # Check if this is a var() call - pass through as-is
+        return unquoted_string("hsl(#{list})") if list.is_var?
+        
         if list.separator == :space
           # New space-separated syntax
           if list.value.length == 3
             # hsl(180 60% 50%) - simple space-separated without alpha
             hue, saturation, lightness = list.value
+            # Check for special numbers and recurse
+            if [hue, saturation, lightness].any? { |v| v.is_special_number? }
+              return unquoted_string("hsl(#{list})")
+            end
             return hsl(hue, saturation, lightness)
           elsif list.value.length == 2
             # hsl(180 60% 50% / 0.5) - space list with slash list for alpha
@@ -864,6 +877,10 @@ module Sass::Script
                hsl_list.value.length == 3 && alpha_list.value.length == 1
               hue, saturation, lightness = hsl_list.value
               alpha = alpha_list.value[0]
+              # Check for special numbers
+              if [hue, saturation, lightness, alpha].any? { |v| v.is_special_number? }
+                return format_color_function("hsl", list)
+              end
               return hsla(hue, saturation, lightness, alpha)
             end
           end
@@ -874,14 +891,14 @@ module Sass::Script
       # Legacy comma-separated syntax
       hue, saturation, lightness = args
       if saturation.nil?
-        return unquoted_string("hsl(#{hue})") if var?(hue)
+        return unquoted_string("hsl(#{hue})") if hue.is_var?
         raise ArgumentError.new("wrong number of arguments (1 for 3)")
       elsif lightness.nil?
-        return unquoted_string("hsl(#{hue}, #{saturation})") if var?(hue) || var?(saturation)
+        return unquoted_string("hsl(#{hue}, #{saturation})") if hue.is_var? || saturation.is_var?
         raise ArgumentError.new("wrong number of arguments (2 for 3)")
       end
 
-      if special_number?(hue) || special_number?(saturation) || special_number?(lightness)
+      if hue.is_special_number? || saturation.is_special_number? || lightness.is_special_number?
         unquoted_string("hsl(#{hue}, #{saturation}, #{lightness})")
       else
         hsla(hue, saturation, lightness, number(1))
@@ -916,11 +933,18 @@ module Sass::Script
       if args.length == 1 && args[0].is_a?(Sass::Script::Value::List)
         list = args[0]
         
+        # Check if this is a var() call - pass through as-is
+        return unquoted_string("hsla(#{list})") if list.is_var?
+        
         if list.separator == :space
           # New space-separated syntax
           if list.value.length == 3
             # hsla(180 60% 50%) - same as hsl without alpha
             hue, saturation, lightness = list.value
+            # Check for special numbers
+            if [hue, saturation, lightness].any? { |v| v.is_special_number? }
+              return unquoted_string("hsla(#{list})")
+            end
             return hsla(hue, saturation, lightness, number(1))
           elsif list.value.length == 2
             # hsla(180 60% 50% / 0.5) - space list with slash list for alpha
@@ -930,6 +954,10 @@ module Sass::Script
                hsl_list.value.length == 3 && alpha_list.value.length == 1
               hue, saturation, lightness = hsl_list.value
               alpha = alpha_list.value[0]
+              # Check for special numbers
+              if [hue, saturation, lightness, alpha].any? { |v| v.is_special_number? }
+                return format_color_function("hsla", list)
+              end
               return hsla(hue, saturation, lightness, alpha)
             end
           end
@@ -940,21 +968,21 @@ module Sass::Script
       # Legacy comma-separated syntax
       hue, saturation, lightness, alpha = args
       if saturation.nil?
-        return unquoted_string("hsla(#{hue})") if var?(hue)
+        return unquoted_string("hsla(#{hue})") if hue.is_var?
         raise ArgumentError.new("wrong number of arguments (1 for 4)")
       elsif lightness.nil?
-        return unquoted_string("hsla(#{hue}, #{saturation})") if var?(hue) || var?(saturation)
+        return unquoted_string("hsla(#{hue}, #{saturation})") if hue.is_var? || saturation.is_var?
         raise ArgumentError.new("wrong number of arguments (2 for 4)")
       elsif alpha.nil?
-        if var?(hue) || var?(saturation) || var?(lightness)
+        if hue.is_var? || saturation.is_var? || lightness.is_var?
           return unquoted_string("hsla(#{hue}, #{saturation}, #{lightness})")
         else
           raise ArgumentError.new("wrong number of arguments (2 for 4)")
         end
       end
 
-      if special_number?(hue) || special_number?(saturation) ||
-         special_number?(lightness) || special_number?(alpha)
+      if hue.is_special_number? || saturation.is_special_number? ||
+         lightness.is_special_number? || alpha.is_special_number?
         return unquoted_string("hsla(#{hue}, #{saturation}, #{lightness}, #{alpha})")
       end
       assert_type hue, :Number, :hue
