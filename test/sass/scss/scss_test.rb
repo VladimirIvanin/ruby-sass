@@ -4437,10 +4437,9 @@ CSS
 }
 SCSS
 
-    # Note: slash separator info is lost in string conversion
     assert_equal(<<CSS, render(<<SCSS))
 .foo {
-  color: rgba(calc(100% - 50%) 0% 0% 0.5); }
+  color: rgba(calc(100% - 50%) 0% 0% / 0.5); }
 CSS
 .foo {
   color: rgba(calc(100% - 50%) 0% 0% / 0.5);

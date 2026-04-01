@@ -3686,5 +3686,87 @@ CSS
 SASS
   end
 
+  def test_multiline_selector_both_lines_with_child_combinator_before_parent_ref
+    assert_equal(<<CSS, render(<<SCSS, :syntax => :scss))
+.main-menu-item.is-current > .main-menu-marker,
+.main-menu-item:hover > .main-menu-marker {
+  color: red; }
+CSS
+.main-menu-marker {
+  .main-menu-item.is-current > &,
+  .main-menu-item:hover > & {
+    color: red;
+  }
+}
+SCSS
+  end
+
+  def test_child_combinator_before_parent_ref_with_multiline_selector
+    assert_equal(<<CSS, render(<<SASS))
+.foo > .child,
+.bar > .child {
+  color: red; }
+CSS
+.foo,
+.bar
+  > .child
+    color: red
+SASS
+  end
+
+  def test_adjacent_combinator_before_parent_ref_with_multiline_selector
+    assert_equal(<<CSS, render(<<SASS))
+.foo + .sibling,
+.bar + .sibling {
+  color: blue; }
+CSS
+.foo,
+.bar
+  + .sibling
+    color: blue
+SASS
+  end
+
+  def test_general_sibling_combinator_before_parent_ref_with_multiline_selector
+    assert_equal(<<CSS, render(<<SASS))
+.foo ~ .sibling,
+.bar ~ .sibling {
+  color: green; }
+CSS
+.foo,
+.bar
+  ~ .sibling
+    color: green
+SASS
+  end
+
+  def test_child_combinator_with_ampersand_and_multiline_selector
+    assert_equal(<<CSS, render(<<SASS))
+.wrapper > .foo,
+.wrapper > .bar {
+  color: red; }
+CSS
+.wrapper
+  > .foo,
+  > .bar
+    color: red
+SASS
+  end
+
+  def test_combinator_before_parent_ref_multiline_scss
+    assert_equal(<<CSS, render(<<SCSS, :syntax => :scss))
+.foo > .child,
+.bar > .child {
+  color: red; }
+CSS
+.foo,
+.bar {
+  > .child {
+    color: red;
+  }
+}
+SCSS
+  end
+
 end
  
