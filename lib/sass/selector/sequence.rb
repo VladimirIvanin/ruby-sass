@@ -67,7 +67,7 @@ module Sass
           sseq_or_op.resolve_parent_refs(super_cseq).members
         end).map do |path|
           path_members = path.map do |seq_or_op|
-            next seq_or_op unless seq_or_op.is_a?(Sequence)
+            next Array(seq_or_op) unless seq_or_op.is_a?(Sequence)
             seq_or_op.members
           end
           if path_members.length == 2 && path_members[1][0] == "\n"
