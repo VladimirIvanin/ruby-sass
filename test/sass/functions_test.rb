@@ -342,9 +342,8 @@ class SassFunctionTest < Minitest::Test
     # Test with calc() and var() - should pass through as strings
     assert_equal("rgb(calc(100% - 50%) 0% 0%)", evaluate("rgb(calc(100% - 50%) 0% 0%)"))
     assert_equal("rgba(calc(100% - 50%) 0% 0% / 0.5)", evaluate("rgba(calc(100% - 50%) 0% 0% / 0.5)"))
-    # var() triggers legacy syntax output with commas
-    assert_equal("hsl(var(--hue), 60%, 50%)", evaluate("hsl(var(--hue) 60% 50%)"))
-    assert_equal("hsla(var(--hue), 60%, 50%, 0.5)", evaluate("hsla(var(--hue) 60% 50% / 0.5)"))
+    assert_equal("hsl(var(--hue) 60% 50%)", evaluate("hsl(var(--hue) 60% 50%)"))
+    assert_equal("hsla(var(--hue) 60% 50% / 0.5)", evaluate("hsla(var(--hue) 60% 50% / 0.5)"))
     
     # Note: Interpolation tests removed - Ruby Sass converts #{50}% to a Number,
     # making it indistinguishable from literal 50%
