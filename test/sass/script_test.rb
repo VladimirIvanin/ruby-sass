@@ -1152,6 +1152,29 @@ SASS
     assert_equal Sass::Script::Value::Number.new(10, ["px"], ["em"]), Sass::Script::Value::Number.new(10, "px", "em")
   end
 
+  # Regression: Ruby Hash#[] calls lookup_key.eql?(stored_key). map-get($map, 768px) against
+  # maps with identifier keys must not call basically_equal? with a String — TypeError.
+  def test_number_eql_non_number_returns_false
+    px = Sass::Script::Value::Number.new(768, "px")
+    id = Sass::Script::Value::String.new("sm", :identifier)
+    str = Sass::Script::Value::String.new("foo", :string)
+    null = Sass::Script::Value::Null.new
+
+    assert_equal false, px.eql?(id)
+    assert_equal false, px.eql?(str)
+    assert_equal false, px.eql?(null)
+    assert_equal false, px.eql?(nil)
+  end
+
+  def test_number_eql_number_unchanged
+    a = Sass::Script::Value::Number.new(10, "px")
+    b = Sass::Script::Value::Number.new(10, "px")
+    c = Sass::Script::Value::Number.new(11, "px")
+
+    assert_equal true, a.eql?(b)
+    assert_equal false, a.eql?(c)
+  end
+
   def test_is_unit
     assert Sass::Script::Value::Number.new(10, "px").is_unit?("px")
     assert Sass::Script::Value::Number.new(10).is_unit?(nil)

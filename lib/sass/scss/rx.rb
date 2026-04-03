@@ -126,8 +126,11 @@ module Sass
       STRING2_NOINTERP = /\'((?:[^\n\r\f\\'#]|#(?!\{)|#{ESCAPE})*)\'/
       STRING_NOINTERP = /#{STRING1_NOINTERP}|#{STRING2_NOINTERP}/
 
-      STATIC_COMPONENT = /#{IDENT}|#{STRING_NOINTERP}|#{HEXCOLOR}|[+-]?#{NUMBER}|\!important/i
-      STATIC_VALUE = %r(#{STATIC_COMPONENT}(\s*[\s,\/]\s*#{STATIC_COMPONENT})*(?=[;}]))i
+      STATIC_COMPONENT = /#{IDENT}|#{STRING_NOINTERP}|#{HEXCOLOR}|[+-]?#{NUMBER}/i
+      # !important выделен отдельным необязательным суффиксом, чтобы избежать
+      # catastrophic backtracking когда !important идёт без пробела после значения
+      # (например: grid-template-areas: "a" "b" "c"!important)
+      STATIC_VALUE = %r(#{STATIC_COMPONENT}(\s*[\s,\/]\s*#{STATIC_COMPONENT})*\s*(\!#{W}important)?(?=[;}]))i
       STATIC_SELECTOR = /(#{NMCHAR}|[ \t]|[,>+*]|[:#.]#{NMSTART}){1,50}([{])/i
     end
   end

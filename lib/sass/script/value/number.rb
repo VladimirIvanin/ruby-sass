@@ -223,6 +223,7 @@ module Sass::Script::Value
     # Hash-equality must be transitive, so it just compares the exact value,
     # numerator units, and denominator units.
     def eql?(other)
+      return false unless other.is_a?(Number)
       basically_equal?(value, other.value) && numerator_units == other.numerator_units &&
         denominator_units == other.denominator_units
     end

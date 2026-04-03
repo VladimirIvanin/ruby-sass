@@ -1,5 +1,6 @@
 require 'minitest/autorun'
-require File.expand_path('../test_helper', __FILE__)
+require File.expand_path('../test_helper', File.dirname(__FILE__))
+require File.expand_path('test_helper', File.dirname(__FILE__))
 require 'sass/script'
 require 'mock_importer'
 
@@ -1452,6 +1453,12 @@ SCSS
     assert_equal "2", evaluate("map-get((foo: 1, bar: 2), bar)")
     assert_equal "null", perform("map-get((foo: 1, bar: 2), baz)").to_sass
     assert_equal "null", perform("map-get((), foo)").to_sass
+  end
+
+  def test_map_get_numeric_key_against_identifier_keys_no_type_error
+    # Same pattern as media mixins: named keys in map, pixel lookup — Hash may compare Number to String keys.
+    assert_equal "null", perform("map-get((sm: 768px, md: 1024px), 768px)").to_sass
+    assert_equal "null", perform("map-get((sm: 768px), 500px)").to_sass
   end
 
   def test_map_get_checks_type

@@ -4447,4 +4447,27 @@ CSS
 SCSS
   end
 
+  def test_grid_template_areas_with_important_no_timeout
+    # Регрессионный тест: STATIC_VALUE regexp вызывал catastrophic backtracking
+    # при grid-template-areas с несколькими строками в кавычках + !important
+    assert_equal(<<CSS, render(<<SCSS))
+div.product form.product-form {
+  grid-template-areas: "user-controls" "title" "price" "variants-bundle" "product-qnt" "btn-trigger" "controls" "product-sale" "bundle" "short-description"!important; }
+CSS
+div.product form.product-form {
+  grid-template-areas:
+    "user-controls"
+    "title"
+    "price"
+    "variants-bundle"
+    "product-qnt"
+    "btn-trigger"
+    "controls"
+    "product-sale"
+    "bundle"
+    "short-description"!important;
+}
+SCSS
+  end
+
 end
