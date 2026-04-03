@@ -4447,6 +4447,102 @@ CSS
 SCSS
   end
 
+  def test_custom_property_sass_variable_interpolated
+    # $var внутри CSS custom property должна интерполироваться так же, как в обычных свойствах
+    assert_equal(<<CSS, render(<<SCSS))
+.a {
+  --color: red; }
+CSS
+$c: red;
+.a {
+  --color: $c;
+}
+SCSS
+  end
+
+  def test_custom_property_sass_variable_in_middle_of_value
+    assert_equal(<<CSS, render(<<SCSS))
+.a {
+  --gap: calc(42 * 1px); }
+CSS
+$n: 42;
+.a {
+  --gap: calc($n * 1px);
+}
+SCSS
+  end
+
+  def test_custom_property_multiple_sass_variables
+    assert_equal(<<CSS, render(<<SCSS))
+.a {
+  --rgb: 255 128 0; }
+CSS
+$r: 255;
+$g: 128;
+$b: 0;
+.a {
+  --rgb: $r $g $b;
+}
+SCSS
+  end
+
+  def test_custom_property_interp_syntax_still_works
+    # #{$var} по-прежнему работает
+    assert_equal(<<CSS, render(<<SCSS))
+.a {
+  --color: blue; }
+CSS
+$c: blue;
+.a {
+  --color: \#{$c};
+}
+SCSS
+  end
+
+  def test_custom_property_plain_value_unchanged
+    # Значения без $var не затрагиваются
+    assert_equal(<<CSS, render(<<SCSS))
+.a {
+  --font: Arial; }
+CSS
+.a {
+  --font: Arial;
+}
+SCSS
+  end
+
+  def test_custom_property_var_function_unchanged
+    # CSS-функция var() остаётся как есть
+    assert_equal(<<CSS, render(<<SCSS))
+.a {
+  --computed: var(--base); }
+CSS
+.a {
+  --computed: var(--base);
+}
+SCSS
+  end
+
+  def test_custom_property_variable_with_string_suffix
+    assert_equal(<<CSS, render(<<SCSS))
+.a {
+  --size: 16px solid; }
+CSS
+$size: 16px;
+.a {
+  --size: $size solid;
+}
+SCSS
+  end
+
+  def test_custom_property_undefined_variable_raises_error
+    assert_raise_message(Sass::SyntaxError, 'Undefined variable: "$undefined".') do
+      render(<<SCSS)
+.a { --x: $undefined; }
+SCSS
+    end
+  end
+
   def test_grid_template_areas_with_important_no_timeout
     # Регрессионный тест: STATIC_VALUE regexp вызывал catastrophic backtracking
     # при grid-template-areas с несколькими строками в кавычках + !important

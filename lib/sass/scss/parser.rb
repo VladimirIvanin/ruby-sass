@@ -904,12 +904,13 @@ module Sass
         # semantics.
         #
         # [token consumption algorithm]: https://drafts.csswg.org/css-syntax-3/#consume-token.
-        result = tok(%r{
+        result = sass_variable_in_custom_property ||
+               tok(%r{
           (
             (?!
               url\(
             )
-            [^()\[\]{}"'#/ \t\r\n\f#{top_level ? ";" : ""}]
+            [^()\[\]{}"'\#$/ \t\r\n\f#{top_level ? ";" : ""}]
           |
             \#(?!\{)
           |
@@ -1059,6 +1060,16 @@ module Sass
       def interpolation(warn_for_color = false)
         return unless tok(INTERP_START)
         sass_script(:parse_interpolated, warn_for_color)
+      end
+
+      def sass_variable_in_custom_property
+        start_pos = source_position
+        return unless tok(VARIABLE)
+        name = @scanner[2]
+        var = Sass::Script::Tree::Variable.new(name)
+        var.line = @line
+        var.source_range = range(start_pos)
+        var
       end
 
       def string
