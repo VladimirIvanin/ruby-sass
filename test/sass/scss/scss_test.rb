@@ -4523,6 +4523,42 @@ CSS
 SCSS
   end
 
+  # Как в Dart Sass declarationValue: url("…") в --* должен разбираться целиком
+  # (раньше ломалось: lexer url() принимал только нецитированный URLCHAR).
+  def test_custom_property_quoted_url_data_uri
+    assert_equal(<<CSS, render(<<SCSS))
+.footer-main-list {
+  --arrow-white: url("data:image/svg+xml,%3Csvg%3E%3C/svg%3E"); }
+CSS
+.footer-main-list {
+  --arrow-white: url("data:image/svg+xml,%3Csvg%3E%3C/svg%3E");
+}
+SCSS
+  end
+
+  def test_custom_property_quoted_url_single_quotes
+    assert_equal(<<CSS, render(<<SCSS))
+.a {
+  --icon: url('data:image/svg+xml,x'); }
+CSS
+.a {
+  --icon: url('data:image/svg+xml,x');
+}
+SCSS
+  end
+
+  def test_custom_property_quoted_url_with_interpolation
+    assert_equal(<<CSS, render(<<SCSS))
+.a {
+  --u: url("prefix-foo-suffix"); }
+CSS
+$mid: foo;
+.a {
+  --u: url("prefix-\#{$mid}-suffix");
+}
+SCSS
+  end
+
   def test_custom_property_variable_with_string_suffix
     assert_equal(<<CSS, render(<<SCSS))
 .a {

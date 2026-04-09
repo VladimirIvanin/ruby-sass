@@ -905,6 +905,7 @@ module Sass
         #
         # [token consumption algorithm]: https://drafts.csswg.org/css-syntax-3/#consume-token.
         result = sass_variable_in_custom_property ||
+               declaration_value_quoted_url ||
                tok(%r{
           (
             (?!
@@ -941,6 +942,25 @@ module Sass
           tok!(/\}/)
           ['{', *value, '}']
         end
+      end
+
+      # url("...") and url('...') inside custom property values (Dart Sass
+      # handles these via bracket/string scanning; our url lexer only matched
+      # unquoted URLCHAR, so quoted data URIs failed before any '(' token).
+      def declaration_value_quoted_url
+        start = @scanner.pos
+        return unless tok(/url\(#{W}/i)
+        inner = interp_string
+        unless inner
+          @scanner.pos = start
+          return
+        end
+        ss
+        unless tok(/\)/)
+          @scanner.pos = start
+          return
+        end
+        ['url(', *inner, ')']
       end
 
       def declaration
