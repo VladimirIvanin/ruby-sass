@@ -131,7 +131,7 @@ OPTS
     end.to_a
     t.options << '--incremental' if Rake.application.top_level_tasks.include?('redoc')
     t.options += FileList.new(scope('yard/*.rb')).to_a.map {|f| ['-e', f]}.flatten
-    files = FileList.new(scope('doc-src/*')).to_a.sort_by {|s| s.size} + %w[MIT-LICENSE VERSION]
+    files = FileList.new('doc-src/*').to_a.sort_by {|s| s.size} + %w[MIT-LICENSE VERSION]
     t.options << '--files' << files.join(',')
     t.options << '--template-path' << scope('yard')
     t.options << '--title' << ENV["YARD_TITLE"] if ENV["YARD_TITLE"]
