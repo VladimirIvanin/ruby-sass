@@ -195,6 +195,8 @@ class UtilTest < Minitest::Test
     assert_equal(["/tmp/foo.rb", -12, "fizzle"], caller_info("/tmp/foo.rb:-12: in `fizzle'"))
     assert_equal(["/tmp/foo.rb", 12, "fizzle"], caller_info("/tmp/foo.rb:12: in `fizzle {}'"))
     assert_equal(["C:/tmp/foo.rb", 12, "fizzle"], caller_info("C:/tmp/foo.rb:12: in `fizzle {}'"))
+    assert_equal(["/tmp/foo.rb", 12, "fizzle"], caller_info("/tmp/foo.rb:12:in 'Foo#fizzle'"))
+    assert_equal(["/tmp/foo.rb", 12, "fizzle"], caller_info("/tmp/foo.rb:12:in 'Foo.fizzle'"))
 
     info = nested_caller_info_fn
     assert_equal(__FILE__, info[0])

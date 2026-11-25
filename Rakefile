@@ -12,195 +12,38 @@ task :default => :test
 
 require 'rake/testtask'
 
-LINE_SIZE = 80
-DECORATION_CHAR = '#'
-
-def print_header(string)
-  length = string.length
-  puts DECORATION_CHAR * LINE_SIZE
-  puts string.center(length + 2, ' ').center(LINE_SIZE, DECORATION_CHAR)
-  puts DECORATION_CHAR * LINE_SIZE
-end
-
-desc "Run all tests"
-task :test do
-  test_cases = [
-    {
-      'env'   => {'MATHN' => 'true'},
-      'tasks' => ['test:ruby', 'test:spec']
-    },
-    {
-      'env'   => {'MATHN' => 'false'},
-      'tasks' => ['test:ruby']
-    }
-  ]
-
-  test_cases.each do |test_case|
-    env = test_case['env']
-    tasks = test_case['tasks']
-
-    env.each do |key, value|
-      ENV[key] = value
-    end
-    tasks.each do |task|
-      print_header("Running task: #{task}, env: #{env}")
-      Rake::Task[task].execute
-    end
-  end
-end
+desc "Run the Ruby test suite"
+task :test => 'test:ruby'
 
 namespace :test do
-  desc "Run the ruby tests (without sass-spec)"
+  desc "Run the Ruby tests"
   Rake::TestTask.new("ruby") do |t|
     t.libs << 'test'
     test_files = FileList[scope('test/**/*_test.rb')]
     test_files.exclude(scope('test/rails/*'))
     test_files.exclude(scope('test/plugins/*'))
     t.test_files = test_files
-    t.warning = true
-    t.verbose = true
+    t.warning = false
   end
-
-  desc "Run sass-spec tests against the local code."
-  task :spec do
-    old_load_path = $:.dup
-    begin
-      $:.unshift(File.join(File.dirname(__FILE__), "lib"))
-      begin
-        require 'sass_spec'
-      rescue LoadError
-        puts "You probably forgot to run: bundle exec rake"
-        raise
-      end
-      SassSpec::Runner.new(
-        language_version: get_version[/^\d+\.\d+/],
-        spec_directory: SassSpec::SPEC_DIR,
-        engine_adapter: SassEngineAdapter.new,
-        generate: false,
-        tap: false,
-        skip: false,
-        verbose: false,
-        filter: "",
-        limit: -1,
-        unexpected_pass: false,
-        nuke: false,
-      ).run || exit(1)
-    ensure
-      $:.replace(old_load_path)
-    end
-  end
-end
-
-# ----- Code Style Enforcement -----
-
-def ruby_version_at_least?(version_string)
-  ruby_version = Gem::Version.new(RUBY_VERSION.dup)
-  version = Gem::Version.new(version_string)
-  ruby_version >= version
 end
 
 # ----- Packaging -----
 
-# Don't use Rake::GemPackageTast because we want prerequisites to run
-# before we load the gemspec.
-desc "Build all the packages."
-task :package => [:revision_file, :date_file, :permissions] do
-  version = get_version
-  File.open(scope('VERSION'), 'w') {|f| f.puts(version)}
-  load scope('sass.gemspec')
-  Gem::Package.build(SASS_GEMSPEC)
-  sh %{git checkout VERSION}
-
-  pkg = "#{SASS_GEMSPEC.name}-#{SASS_GEMSPEC.version}"
-  mkdir_p "pkg"
-  verbose(true) {mv "#{pkg}.gem", "pkg/#{pkg}.gem"}
-
-  sh %{rm -f pkg/#{pkg}.tar.gz}
-  verbose(false) {SASS_GEMSPEC.files.each {|f| sh %{tar rf pkg/#{pkg}.tar #{f}}}}
-  sh %{gzip pkg/#{pkg}.tar}
-end
-
-task :permissions do
-  sh %{chmod -R a+rx bin}
-  sh %{chmod -R a+r .}
-  require 'shellwords'
-  Dir.glob('test/**/*_test.rb') do |file|
-    next if file =~ %r{^test/haml/spec/}
-    sh %{chmod a+rx #{file}}
-  end
-end
-
-task :revision_file do
-  require scope('lib/sass')
-
-  release = Rake.application.top_level_tasks.include?('release') || File.exist?(scope('EDGE_GEM_VERSION'))
-  if Sass.version[:rev] && !release
-    File.open(scope('REVISION'), 'w') { |f| f.puts Sass.version[:rev] }
-  elsif release
-    File.open(scope('REVISION'), 'w') { |f| f.puts "(release)" }
-  else
-    File.open(scope('REVISION'), 'w') { |f| f.puts "(unknown)" }
-  end
-end
-
-task :date_file do
-  File.open(scope('VERSION_DATE'), 'w') do |f|
-    f.puts Time.now.utc.strftime('%d %B %Y %T %Z')
-  end
-end
-
-# We also need to get rid of this file after packaging.
-at_exit do
-  File.delete(scope('REVISION')) rescue nil
-  File.delete(scope('VERSION_DATE')) rescue nil
+desc "Build the Sass gem and source archive in pkg/"
+task :package do
+  spec = Gem::Specification.load(scope('sass.gemspec'))
+  mkdir_p 'pkg'
+  Gem::Package.build(spec, false, false, "pkg/#{spec.file_name}")
+  verbose(false) { sh 'tar', '-czf', "pkg/#{spec.full_name}.tar.gz", '--', *spec.files }
 end
 
 desc "Install Sass as a gem. Use SUDO=1 to install with sudo."
 task :install => [:package] do
-  gem  = RUBY_PLATFORM =~ /java/  ? 'jgem' : 'gem'
-  sh %{#{'sudo ' if ENV["SUDO"]}#{gem} install --no-ri pkg/sass-#{get_version}}
-end
-
-desc "Release a new Sass package to RubyGems.org."
-task :release => [:check_release, :package] do
-  version = File.read(scope("VERSION")).strip
-  sh %{gem push pkg/sass-#{version}.gem}
-end
-
-# Ensures that the VERSION file has been updated for a new release.
-task :check_release do
-  version = File.read(scope("VERSION")).strip
-  raise "There have been changes since current version (#{version})" if changed_since?(version)
-  raise "VERSION_NAME must not be 'Bleeding Edge'" if File.read(scope("VERSION_NAME")) == "Bleeding Edge"
-end
-
-# Reads a password from the command line.
-#
-# @param name [String] The prompt to use to read the password
-def read_password(prompt)
-  require 'readline'
-  system "stty -echo"
-  Readline.readline("#{prompt}: ").strip
-ensure
-  system "stty echo"
-  puts
-end
-
-# Returns whether or not the repository, or specific files,
-# has/have changed since a given revision.
-#
-# @param rev [String] The revision to check against
-# @param files [Array<String>] The files to check.
-#   If this is empty, checks the entire repository
-def changed_since?(rev, *files)
-  IO.popen("git diff --exit-code #{rev} #{files.join(' ')}") {}
-  return !$?.success?
-end
-
-# Get the version string. If this is being installed from Git,
-# this includes the proper prerelease version.
-def get_version
-  File.read(scope('VERSION').strip)
+  spec = Gem::Specification.load(scope('sass.gemspec'))
+  gem = RUBY_PLATFORM =~ /java/ ? 'jgem' : 'gem'
+  command = [gem, 'install', '--no-document', "pkg/#{spec.file_name}"]
+  command.unshift('sudo') if ENV['SUDO']
+  sh(*command)
 end
 
 task :watch_for_update do

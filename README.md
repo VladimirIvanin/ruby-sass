@@ -1,3 +1,7 @@
+# sass4
+
+`sass4` is a fork of Ruby Sass for existing projects. It adds compatibility with modern Ruby and support for selected modern CSS syntax, including CSS variables and space-separated `rgb()` and `hsl()` colors.
+
 ## Ruby Sass Has Reached End-of-Life
 
 Ruby Sass should no longer be used, and will no longer be receiving any updates.
@@ -13,7 +17,7 @@ See [the Sass blog][], and consider switching to the [`sassc` gem].
 
 This project has been updated for compatibility with modern Ruby versions.
 
-# Sass [![Travis Build Status](https://travis-ci.org/sass/ruby-sass.svg?branch=next)](https://travis-ci.org/sass/ruby-sass) [![Gem Version](https://badge.fury.io/rb/sass.svg)](http://badge.fury.io/rb/sass) [![Inline docs](http://inch-ci.org/github/sass/sass.svg)](http://inch-ci.org/github/sass/sass)
+[![CI](https://github.com/VladimirIvanin/ruby-sass/actions/workflows/ci.yml/badge.svg)](https://github.com/VladimirIvanin/ruby-sass/actions/workflows/ci.yml) [![Gem version](https://badge.fury.io/rb/sass4.svg)](https://rubygems.org/gems/sass4)
 
 **Sass makes CSS fun again**. Sass is an extension of CSS,
 adding nested rules, variables, mixins, selector inheritance, and more.
@@ -41,7 +45,7 @@ Sass can be used from the command line
 or as part of a web framework.
 The first step is to install the gem:
 
-    gem install sass
+    gem install sass4
 
 After you convert some CSS to Sass, you can run
 
@@ -52,14 +56,7 @@ For more information on these commands, check out
 
     sass --help
 
-To install Sass in Rails 2,
-just add `config.gem "sass"` to `config/environment.rb`.
-In Rails 3, add `gem "sass"` to your Gemfile instead.
-`.sass` or `.scss` files should be placed in `public/stylesheets/sass`,
-where they'll be automatically compiled
-to corresponding CSS files in `public/stylesheets` when needed
-(the Sass template directory is customizable...
-see [the Sass reference](https://sass-lang.com/docs/yardoc/file.SASS_REFERENCE.html#template_location-option) for details).
+If your project uses Bundler, add `gem 'sass4', :require => 'sass'` to your Gemfile.
 
 Sass can also be used with any Rack-enabled web framework.
 To do so, just add
@@ -75,6 +72,37 @@ will be compiled into CSS files in `public/stylesheets` on every request.
 
 To use Sass programmatically,
 check out the [YARD documentation](https://sass-lang.com/documentation/file.SASS_REFERENCE.html#using_sass).
+
+## Development and releases
+
+Run the Ruby test suite with Bundler and Rake.
+
+```sh
+bundle install
+bundle exec rake test
+```
+
+CI runs the suite on Ruby 3.3, 4.0.10, and the latest stable MRI release.
+To build the gem and source archive locally, run `bundle exec rake package`.
+To build the API documentation, install the optional `docs` group with
+`BUNDLE_WITH=docs bundle install` and run `BUNDLE_WITH=docs bundle exec rake doc`.
+
+Configure a [RubyGems trusted publisher] for `sass4` with owner `VladimirIvanin`,
+repository `ruby-sass`, and workflow filename `release.yml`. Leave the environment
+field blank.
+
+Commit the release version in `VERSION`, then create and push its matching `v` tag.
+For example, with `VERSION` set to `4.0.6`, run the following commands.
+
+```sh
+git tag -a v4.0.6 -m 'Release sass4 4.0.6'
+git push origin v4.0.6
+```
+
+GitHub Actions runs the CI matrix and checks the tag against `VERSION` before
+building and publishing the gem to RubyGems.org.
+
+[RubyGems trusted publisher]: https://guides.rubygems.org/trusted-publishing/#adding-a-trusted-publisher-to-an-existing-gem
 
 ## Formatting
 

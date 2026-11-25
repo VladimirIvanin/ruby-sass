@@ -688,8 +688,8 @@ module Sass::Script
       # Legacy comma-separated syntax
       red, green, blue = args
       if green.nil?
-        return unquoted_string("rgb(#{red})") if red.is_var?
-        raise ArgumentError.new("wrong number of arguments (1 for 3)")
+        return unquoted_string("rgb(#{red})") if red&.is_var?
+        raise ArgumentError.new("wrong number of arguments (#{args.size} for 3)")
       elsif blue.nil?
         return unquoted_string("rgb(#{red}, #{green})") if red.is_var? || green.is_var?
         raise ArgumentError.new("wrong number of arguments (2 for 3)")
@@ -891,8 +891,8 @@ module Sass::Script
       # Legacy comma-separated syntax
       hue, saturation, lightness = args
       if saturation.nil?
-        return unquoted_string("hsl(#{hue})") if hue.is_var?
-        raise ArgumentError.new("wrong number of arguments (1 for 3)")
+        return unquoted_string("hsl(#{hue})") if hue&.is_var?
+        raise ArgumentError.new("wrong number of arguments (#{args.size} for 3)")
       elsif lightness.nil?
         return unquoted_string("hsl(#{hue}, #{saturation})") if hue.is_var? || saturation.is_var?
         raise ArgumentError.new("wrong number of arguments (2 for 3)")
@@ -968,8 +968,8 @@ module Sass::Script
       # Legacy comma-separated syntax
       hue, saturation, lightness, alpha = args
       if saturation.nil?
-        return unquoted_string("hsla(#{hue})") if hue.is_var?
-        raise ArgumentError.new("wrong number of arguments (1 for 4)")
+        return unquoted_string("hsla(#{hue})") if hue&.is_var?
+        raise ArgumentError.new("wrong number of arguments (#{args.size} for 4)")
       elsif lightness.nil?
         return unquoted_string("hsla(#{hue}, #{saturation})") if hue.is_var? || saturation.is_var?
         raise ArgumentError.new("wrong number of arguments (2 for 4)")
@@ -977,7 +977,7 @@ module Sass::Script
         if hue.is_var? || saturation.is_var? || lightness.is_var?
           return unquoted_string("hsla(#{hue}, #{saturation}, #{lightness})")
         else
-          raise ArgumentError.new("wrong number of arguments (2 for 4)")
+          raise ArgumentError.new("wrong number of arguments (3 for 4)")
         end
       end
 

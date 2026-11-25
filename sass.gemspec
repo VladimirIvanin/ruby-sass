@@ -1,10 +1,6 @@
 require 'rubygems'
 
-# Note that Sass's gem-compilation process requires access to the filesystem.
-# This means that it cannot be automatically run by e.g. GitHub's gem system.
-# However, a build server automatically packages the master branch
-# every time it's pushed to; this is made available as a prerelease gem.
-SASS_GEMSPEC = Gem::Specification.new do |spec|
+Gem::Specification.new do |spec|
   spec.name = 'sass4'
   spec.summary = "A powerful but elegant CSS compiler that makes CSS fun again."
   spec.version = File.read(File.dirname(__FILE__) + '/VERSION').strip
@@ -24,14 +20,9 @@ SASS_GEMSPEC = Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency 'sass-listen', '~> 4.0.0'
 
-  spec.add_development_dependency 'yard', '~> 0.9.0'
-  spec.add_development_dependency 'redcarpet', '~> 3.6.0'
-  spec.add_development_dependency 'nokogiri', '~> 1.15.0'
-  spec.add_development_dependency 'minitest', '~> 5.20'
-
-  readmes = Dir['*'].reject{ |x| x =~ /(^|[^.a-z])[a-z]+/ || x == "TODO" }
   spec.executables = ['sass', 'sass-convert', 'scss']
-  spec.files = Dir['rails/init.rb', '{lib,bin,extra}/**/*', 'init.rb', '.yardopts'] + readmes
+  spec.files = %w[.yardopts CODE_OF_CONDUCT.md CONTRIBUTING.md MIT-LICENSE README.md VERSION VERSION_NAME
+                  init.rb rails/init.rb extra/update_watch.rb] + Dir['lib/**/*.rb']
   spec.homepage = 'https://github.com/VladimirIvanin/ruby-sass'
   spec.license = "MIT"
 

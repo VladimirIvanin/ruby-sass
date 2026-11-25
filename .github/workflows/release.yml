@@ -1,0 +1,40 @@
+name: Release sass4
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: test
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify tag version
+        run: |
+          version="$(<VERSION)"
+          if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "Expected tag v$version, got $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ruby
+      - name: Build gem
+        run: |
+          mkdir -p pkg
+          gem build sass.gemspec --output pkg/sass4.gem
+      - uses: rubygems/configure-rubygems-credentials@c6ca7f4bac0e29c9bde8eeae0a0a986b27efa05f # v2.2.0
+      - name: Publish to RubyGems.org
+        run: gem push pkg/sass4.gem

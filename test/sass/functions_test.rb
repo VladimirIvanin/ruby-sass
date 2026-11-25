@@ -46,6 +46,10 @@ module Sass::Script::Functions::UserFunctions
   def fetch_the_variable
     environment.var('variable')
   end
+
+  def call_with_wrong_arity
+    no_kw_args(nil)
+  end
 end
 
 module Sass::Script::Functions
@@ -1400,6 +1404,27 @@ SCSS
     flunk("Expected exception")
   rescue Sass::SyntaxError => e
     assert_equal("Function no_kw_args doesn't support keyword arguments", e.message)
+  end
+
+  def test_wrong_arity_reports_the_stylesheet_location
+    {
+      'red()' => '0 for 1', 'rgb()' => '0 for 3', 'rgb(1)' => '1 for 3',
+      'rgba()' => '0 for 4', 'hsl()' => '0 for 3', 'hsla()' => '0 for 4',
+      'hsla(1, 2%, 3%)' => '3 for 4', 'alpha(1, 2)' => '2 for 1',
+      'join(1, 2, 3, 4, 5)' => '5 for 2..4'
+    }.each do |call, counts|
+      source = "a {\n  color: #{call};\n}"
+      error = assert_raises(Sass::SyntaxError, call) do
+        Sass::Engine.new(source, :syntax => :scss, :filename => 'theme.scss', :cache => false).render
+      end
+      assert_equal "wrong number of arguments (#{counts}) for `#{call.split('(').first}'", error.message
+      assert_equal 'theme.scss', error.sass_filename
+      assert_equal 2, error.sass_line
+    end
+  end
+
+  def test_wrong_arity_inside_user_function_raises_argument_error
+    assert_raises(ArgumentError) {evaluate('call-with-wrong-arity()')}
   end
 
   def test_keyword_args_with_missing_argument

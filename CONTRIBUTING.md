@@ -39,26 +39,9 @@ merging.
 
 ### Testing
 
-Tests for changes to the Sass language go in
-[sass-spec](https://github.com/sass/sass-spec) so that other
-implementations (E.g. libSass) can be tested against the same test
-suite. The sass-spec repo follows a "trunk development" model in that
-the tests there test against different version of the Sass language (as
-opposed to having branches that track different Sass versions). When
-contributing changes to Sass, update the Gemfile to use sass-spec from a
-branch or fork that has the new tests. When the feature lands in Sass,
-the committer will also merge the corresponding sass-spec changes.
-
-The [documentation of
-sass-spec](https://github.com/sass/sass-spec/blob/master/README.md)
-explains how to run sass-spec and contribute changes. In development,
-Change the Gemfile(s) to use the `:path` option against the sass-spec gem
-to link your local checkout of sass and sass-spec together in one or
-both directions.
-
-Changes to Sass internals or Ruby Sass specific features (E.g.
-the `sass-convert` tool) should always have tests in the Sass `test`
-directory following the conventions you see there.
+Add regression tests under `test/sass/` following the conventions of nearby
+tests. Run the suite with `bundle exec rake test`, or run a single file with
+`bundle exec ruby -Ilib:test test/sass/functions_test.rb`.
 
 ### Feature Branches
 

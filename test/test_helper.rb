@@ -2,9 +2,9 @@ lib_dir = File.dirname(__FILE__) + '/../lib'
 
 require 'minitest/autorun'
 require 'fileutils'
+Warning[:deprecated] = false
 $:.unshift lib_dir unless $:.include?(lib_dir)
 require 'sass'
-require 'mathn' if ENV['MATHN'] == 'true'
 
 Sass::RAILS_LOADED = true unless defined?(Sass::RAILS_LOADED)
 
